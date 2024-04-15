@@ -1,0 +1,4 @@
+1. Check install kubectl
+2. Check install krew
+3. install krew
+2. install hlf operator

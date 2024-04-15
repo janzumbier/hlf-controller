@@ -1,0 +1,87 @@
+---
+- name: Check prequisites
+  hosts: localhost
+  gather_facts: true
+  connection: local
+  vars: 
+    kubeconfig_file: ~/.kube/config
+  tasks: 
+    - name: Check if kubectl is installed
+      command: kubectl version --client=true
+      register: kubectl_version_output
+
+    - name: Print kubectl version if installed
+      debug:
+        msg: "kubectl is installed. Version: {{ kubectl_version_output.stdout }}"
+      when: kubectl_version_output.rc == 0
+
+    - name: Check if kubectl-krew is installed
+      command: kubectl krew version
+      register: krew_check_output
+
+    - name: Print krew version if installed
+      debug:
+        msg: "kubectl krew is installed. Version: {{ krew_check_output.stdout }}"
+      when: krew_check_output.rc == 0
+    
+    - name: Check if helm is installed
+      command: helm version
+      register: helm_check_output
+
+    - name: Print helm version if installed
+      debug:
+        msg: "helm is installed. Version: {{ helm_check_output.stdout }}"
+      when: helm_check_output.rc == 0
+
+    - name: Check if hlf operator has already been installed
+      k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: default
+        label_selectors:
+          app.kubernetes.io/instance=hlf-operator
+      register: hlf_operator_installed
+
+    - name: Install hlf-operator 
+      block:
+        - name: Add the repository
+          kubernetes.core.helm_repository:
+            name: kfs
+            force_update: true
+            repo_url: https://kfsoftware.github.io/hlf-helm-charts
+            state: present
+
+        - name: Installing hlf-operator helm chart
+          kubernetes.core.helm:
+            name: hlf-operator
+            namespace: default
+            chart_version: 1.8.0
+            chart_ref: kfs/hlf-operator
+
+
+        - name: Wait for pod to be running
+          k8s_info:
+            api_version: v1
+            kind: Pod
+            namespace: default
+            label_selectors:
+              app.kubernetes.io/instance=hlf-operator
+          register: pod_info
+          retries: 15  # Number of retries
+          delay: 5     # Delay between retries (in seconds)
+
+        - name: Fail if pod is not running after waiting
+          ansible.builtin.fail:
+            msg: "Pod is not running after waiting"
+          when: pod_info.resources | selectattr('status.phase', 'equalto', 'Running') | list | length == 0
+
+        - name: install hlf-operator
+          command: kubectl krew install hlf
+          
+      when: hlf_operator_installed.resources == 0
+
+    
+
+
+      
+
