@@ -1,0 +1,2 @@
+# kubectl hlf ca create --storage-class=standard --capacity=1Gi --name=org1-ca \
+#    --enroll-id=enroll --enroll-pw=enrollpw --hosts=org1-ca.localho.st --istio-port=443

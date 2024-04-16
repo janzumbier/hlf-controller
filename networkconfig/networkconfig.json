@@ -1,0 +1,48 @@
+{
+
+"network": {
+
+    "demo":{
+        "ordererorg":{
+            "mspid":"OrdererMSP",
+            "orderer":{
+                "orderer1":{
+                    "name":"ord-node1",
+                    "capacity":"2Gi",
+                    "caname":"ord-ca.default",
+                    "hosts":"orderer0-ord.localho.st",
+                    "istio-port": 443
+                }
+            }
+            
+        },
+        "peerorg":{
+            "mspid": "Org1MSP",
+            "peers":{
+                "peer0":{
+                    "name":"org1-peer0",
+                    "capacity":"5Gi",
+                    "caname":"org1-ca.default",
+                    "hosts":"peer0-org1.localho.st",
+                    "istio-port": 443
+                },
+
+                "peer1":{
+                    "name":"org1-peer1",
+                    "capacity":"5Gi",
+                    "caname":"org1-ca.default",
+                    "hosts":"peer1-org1.localho.st",
+                    "istio-port": 443
+                }
+
+            }
+        },
+        "chaincode":{}
+    }
+
+    
+
+}
+
+
+}
