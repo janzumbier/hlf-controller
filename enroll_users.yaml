@@ -1,0 +1,4 @@
+---
+- name: register and enroll users
+  hosts: localhost
+    tasks:
