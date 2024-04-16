@@ -11,14 +11,14 @@
                         "capacity":"5Gi",
                         "caname":"org1-ca.default",
                         "hosts":"peer0-org1.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     },
                     {
                         "name":"org1-peer1",
                         "capacity":"5Gi",
                         "caname":"org1-ca.default",
                         "hosts":"peer1-org1.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     }
                 ],
                 "certificateAuthorities": [
@@ -26,7 +26,7 @@
                         "name":"org1-ca",
                         "capacity":"1Gi",
                         "hosts":"org1-ca.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     }
                 ]
             },
@@ -40,14 +40,14 @@
                         "capacity":"5Gi",
                         "caname":"org2-ca.default",
                         "hosts":"peer0-org2.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     },
                     {
                         "name":"org2-peer1",
                         "capacity":"5Gi",
                         "caname":"org2-ca.default",
                         "hosts":"peer1-org2.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     }
                 ],
                 "certificateAuthorities": [
@@ -55,7 +55,7 @@
                         "name":"org2-ca",
                         "capacity":"1Gi",
                         "hosts":"org2-ca.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     }
                 ]
             }
@@ -70,7 +70,7 @@
                         "capacity":"2Gi",
                         "caname":"ord-ca.default",
                         "hosts":"orderer0-ord.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     }
                 ],
                 "certificateAuthorities": [
@@ -78,7 +78,7 @@
                         "name":"ord-ca",
                         "capacity":"1Gi",
                         "hosts":"ord-ca.localho.st",
-                        "istio-port": 443
+                        "istioport": 443
                     }
                 ]
             }

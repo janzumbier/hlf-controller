@@ -78,7 +78,6 @@
         - name: install hlf-operator
           command: kubectl krew install hlf
           
-      when: hlf_operator_installed.resources == 0
 
     
 

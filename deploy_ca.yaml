@@ -1,5 +1,3 @@
-# kubectl hlf ca create --storage-class=standard --capacity=1Gi --name=org1-ca \
-#    --enroll-id=enroll --enroll-pw=enrollpw --hosts=org1-ca.localho.st --istio-port=443
 ---
 - name: create cas
   hosts: localhost
@@ -19,8 +17,16 @@
       debug:
         msg: "{{ item }}"
       loop: "{{ peer_ca}}"
+    
+    - name: Deploy Peer cas
+      command: kubectl hlf ca create --storage-class=standard --capacity={{ item.capacity }} --name={{ item.name  }} --enroll-id=enroll --enroll-pw=enrollpw --hosts={{ item.hosts  }} --istio-port={{ item.istioport }} 
+      loop: "{{ peer_ca }}"
 
     - name: Print detected configuration for orderer-orgs
       debug:
         msg: "{{ item }}"
-      loop: "{{ orderer_ca}}"
+      loop: "{{ orderer_ca }}"
+    
+    - name: Deploy orderer cas
+      command: kubectl hlf ca create --storage-class=standard --capacity={{ item.capacity }} --name={{ item.name }} --enroll-id=enroll --enroll-pw=enrollpw --hosts={{ item.hosts }} --istio-port={{ item.istioport }} 
+      loop: "{{ orderer_ca }}"
