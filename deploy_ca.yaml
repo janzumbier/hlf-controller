@@ -9,10 +9,18 @@
         file: networkconfig/networkconfigexample.json
         name: networkconfig
 
-    - name: Query demo configuration
+    - name: Get ca parameters
       ansible.builtin.set_fact:
-        demo_config: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*].peers[*].name') }}"
+        peer_ca: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*].certificateAuthorities[*][]')}}"
+        orderer_ca: "{{ networkconfig | json_query('networkConfig.ordererOrganisations[*].certificateAuthorities[*][]')}}"
+
     
-    - name: Print demo configuration
-      ansible.builtin.debug:
-        var: demo_config
+    - name: Print detected configuration for peer-orgs
+      debug:
+        msg: "{{ item }}"
+      loop: "{{ peer_ca}}"
+
+    - name: Print detected configuration for orderer-orgs
+      debug:
+        msg: "{{ item }}"
+      loop: "{{ orderer_ca}}"
