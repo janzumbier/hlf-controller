@@ -1,2 +1,18 @@
 # kubectl hlf ca create --storage-class=standard --capacity=1Gi --name=org1-ca \
 #    --enroll-id=enroll --enroll-pw=enrollpw --hosts=org1-ca.localho.st --istio-port=443
+---
+- name: create cas
+  hosts: localhost
+  tasks:
+    - name: Read JSON file
+      ansible.builtin.include_vars:
+        file: networkconfig/networkconfigexample.json
+        name: networkconfig
+
+    - name: Query demo configuration
+      ansible.builtin.set_fact:
+        demo_config: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*].peers[*].name') }}"
+    
+    - name: Print demo configuration
+      ansible.builtin.debug:
+        var: demo_config
