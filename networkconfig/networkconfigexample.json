@@ -92,6 +92,7 @@
                     {
                         "name": "basic",
                         "version": "1.0",
+                        "language": "java",
                         "policy": "AND('Org1MSP.member', 'Org2MSP.member')"
                     }
                 ]
