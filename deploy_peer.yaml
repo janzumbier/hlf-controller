@@ -1,38 +1,29 @@
-#kubectl hlf ca register --name=org1-ca --user=peer --secret=peerpw --type=peer \
-# --enroll-id enroll --enroll-secret=enrollpw --mspid Org1MSP
-
-# kubectl hlf peer create --statedb=couchdb --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=standard --enroll-id=peer --mspid=Org1MSP \
-#        --enroll-pw=peerpw --capacity=5Gi --name=org1-peer0 --ca-name=org1-ca.default \
-#        --hosts=peer0-org1.localho.st --istio-port=443
-
 ---
-- name: Deploy peers
+- name: Deploy all configured peers from network config
   hosts: localhost
   tasks:
     - name: Read JSON file
       ansible.builtin.include_vars:
         file: networkconfig/networkconfigexample.json
         name: networkconfig
-
-    - name: Get peer parameters to register user peer
+      
+    - name: Load all peer organisations from network config
       ansible.builtin.set_fact:
-        peer_ca_names: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*].certificateAuthorities[*][].name')}}"
-        peer_mspids: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*].mspid')}}" 
+        peer_organisations: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*]')}}"
+
+    - name: Print peer organisations
+      debug:
+        msg: "{{ item }} "
+      with_items: "{{ peer_organisations }}"
 
     - name: Register user peer
-      command : kubectl hlf ca register --name={{ item.0 }} --user=peer --secret=peerpw --type=peer --enroll-id=enroll --enroll-secret=enrollpw --mspid={{item.1}}
-      loop: "{{ peer_ca_names|zip(peer_mspids) }}"
+      command : kubectl hlf ca register --name={{ item.certificateAuthorities[0].name }} --user=peer --secret=peerpw --type=peer --enroll-id=enroll --enroll-secret=enrollpw --mspid={{item.mspid}}
+      loop: "{{ peer_organisations}}"
       ignore_errors: true
 
-    - name: Get peer parameters for deployment
-      ansible.builtin.set_fact:
-        peer_parameters: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*].peers[*][]')}}"   
+    
 
-    - name: Print detected parameters for peers
-      debug:
-        msg: "{{ item }}"
-      loop: "{{ peer_parameters}}"
-
-    #- name: Register user peer
-    #  command: kubectl hlf peer create --statedb=couchdb --image=$PEER_IMAGE --version=$PEER_VERSION --storage-class=standard --enroll-id=peer --mspid=Org1MSP --enroll-pw=peerpw --capacity=5Gi --name=org1-peer0 --ca-name=org1-ca.default --hosts=peer0-org1.localho.st --istio-port=443
-     # loop: "{{ peer_parameters }}"
+    - name: Process each peer organization and its peers
+      command: kubectl hlf peer create --statedb=couchdb --image=hyperledger/fabric-peer --version=2.4.6--storage-class=standard --enroll-id=peer --mspid={{ item.0.mspid }} --enroll-pw=peerpw --capacity= {{item.1.capacity}} --name={{item.1.name}}
+       --ca-name={{item.1.caname}} --hosts={{item.1.hosts}} --istio-port={{item.1.istioport}}
+      loop: "{{ peer_organisations | subelements('peers') }}"
