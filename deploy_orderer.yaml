@@ -26,10 +26,10 @@
 
     - name: Register user orderer
       command : kubectl hlf ca register --name={{ item.certificateAuthorities[0].name }} --user=orderer --secret=ordererpw --type=orderer --enroll-id=enroll --enroll-secret=enrollpw --mspid={{item.mspid}}
-      loop: "{{ peer_organisations}}"
+      loop: "{{ orderer_organisations}}"
       ignore_errors: true
 
     - name: Deploy each orderer of each organization
-      command: kubectl hlf orderer create --statedb=couchdb --image=hyperledger/fabric-orderer --version=2.4.6--storage-class=standard --enroll-id=orderer --mspid={{ item.0.mspid }} --enroll-pw=ordererpw --capacity= {{item.1.capacity}} --name={{item.1.name}}
+      command: kubectl hlf ordnode create --image=hyperledger/fabric-orderer --version=2.4.6 --storage-class=standard --enroll-id=orderer --mspid={{ item.0.mspid}} --enroll-pw=ordererpw --capacity={{item.1.capacity}} --name={{item.1.name}}
        --ca-name={{item.1.caname}} --hosts={{item.1.hosts}} --istio-port={{item.1.istioport}}
-      loop: "{{ peer_organisations | subelements('peers') }}"
+      loop: "{{ orderer_organisations | subelements('orderers') }}"
