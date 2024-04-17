@@ -22,6 +22,6 @@
       ignore_errors: true
 
     - name: Deploy each peer of each organization
-      command: kubectl hlf peer create --statedb=couchdb --image=hyperledger/fabric-peer --version=2.4.6--storage-class=standard --enroll-id=peer --mspid={{ item.0.mspid }} --enroll-pw=peerpw --capacity= {{item.1.capacity}} --name={{item.1.name}}
+      command: kubectl hlf peer create --statedb=couchdb --image=hyperledger/fabric-peer --version=2.4.6 --storage-class=standard --enroll-id=peer --mspid={{ item.0.mspid }} --enroll-pw=peerpw --capacity={{item.1.capacity}} --name={{item.1.name}}
        --ca-name={{item.1.caname}} --hosts={{item.1.hosts}} --istio-port={{item.1.istioport}}
       loop: "{{ peer_organisations | subelements('peers') }}"
