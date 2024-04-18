@@ -3,26 +3,30 @@ kind: FabricFollowerChannel
 metadata:
   name: {{ metadata_name }}
 spec:
+  
   anchorPeers:
-    {% for anchor_peer in anchor_peers %}
+    {% for anchor_peer in anchor_peers -%}
     - host: {{ anchor_peer.host }}
       port: {{ anchor_peer.port }}
     {% endfor %}
+
   hlfIdentity:
-    secretKey: {{ hlf_identity.secretKey }}
-    secretName: {{ hlf_identity.secretName }}
-    secretNamespace: {{ hlf_identity.secretNamespace }}
-  mspId: {{ msp_id }}
-  name: {{ channel_name }}
+    secretKey: {{ secretKey }}
+    secretName: {{ secretName }}
+    secretNamespace: {{ secretNamespace }}
+
+  mspId: {{ targetmspid }}
+  name: {{ targetchannel }}
   externalPeersToJoin: []
   orderers:
-    {% for orderer in orderers %}
-    - certificate: |-
-        {{ orderer.certificate }}
+    {% for orderer in orderers -%}
+    - certificate: |
+    {{ orderer.certificate }}
       url: {{ orderer.url }}
     {% endfor %}
+    
   peersToJoin:
-    {% for peer in peers_to_join %}
+    {% for peer in peers_to_join -%}
     - name: {{ peer.name }}
       namespace: {{ peer.namespace }}
     {% endfor %}

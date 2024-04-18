@@ -1,0 +1,37 @@
+{
+    "metadata_name": "demo-org2msp",
+    "anchor_peers": [
+      {
+        "host": "org2-peer0.default",
+        "port": 7051
+      }
+    ],
+    "hlf_identity": {
+      "secretKey": "org2msp.yaml",
+      "secretName": "wallet2",
+      "secretNamespace": "default"
+    },
+    "msp_id": "Org2MSP",
+    "channel_name": "demo-channel-org2",
+    "orderers": [
+      {
+        "certificate": "-----BEGIN CERTIFICATE-----\nMIICZzCCAg+gAwIBAgIQbRm1...\n-----END CERTIFICATE-----",
+        "url": "grpcs://ord-node2.default:7050"
+      },
+      {
+        "certificate": "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIDAKCZ...\n-----END CERTIFICATE-----",
+        "url": "grpcs://ord-node3.default:7050"
+      }
+    ],
+    "peers_to_join": [
+      {
+        "name": "org2-peer0",
+        "namespace": "default"
+      },
+      {
+        "name": "org2-peer1",
+        "namespace": "default"
+      }
+    ]
+  }
+  
