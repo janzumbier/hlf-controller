@@ -1,0 +1,79 @@
+apiVersion: hlf.kungfusoftware.es/v1alpha1
+kind: FabricMainChannel
+metadata:
+  name: {{ metadata_name }}
+spec:
+  name: {{ spec_name }}
+  adminOrdererOrganizations:
+    {% for admin_orderer_org in admin_orderer_orgs %}
+    - mspID: {{ admin_orderer_org.mspID }}
+    {% endfor %}
+  adminPeerOrganizations:
+    {% for admin_peer_org in admin_peer_orgs %}
+    - mspID: {{ admin_peer_org.mspID }}
+    {% endfor %}
+  channelConfig:
+    application:
+      acls: null
+      capabilities:
+        - V2_0
+      policies: null
+    capabilities:
+      - V2_0
+    orderer:
+      batchSize:
+        absoluteMaxBytes: 1048576
+        maxMessageCount: 10
+        preferredMaxBytes: 524288
+      batchTimeout: 2s
+      capabilities:
+        - V2_0
+      etcdRaft:
+        options:
+          electionTick: 10
+          heartbeatTick: 1
+          maxInflightBlocks: 5
+          snapshotIntervalSize: 16777216
+          tickInterval: 500ms
+      ordererType: etcdraft
+      policies: null
+      state: STATE_NORMAL
+    policies: null
+  externalOrdererOrganizations: []
+  peerOrganizations:
+    {% for peer_org in peer_orgs %}
+    - mspID: {{ peer_org.mspID }}
+      caName: "{{ peer_org.caName }}"
+      caNamespace: "{{ peer_org.caNamespace }}"
+    {% endfor %}
+  identities:
+    {% for identity_key, identity_val in identities.items() %}
+    {{ identity_key }}:
+      secretKey: {{ identity_val.secretKey }}
+      secretName: {{ identity_val.secretName }}
+      secretNamespace: {{ identity_val.secretNamespace }}
+    {% endfor %}
+  externalPeerOrganizations: []
+  ordererOrganizations:
+    {% for orderer_org in orderer_orgs %}
+    - caName: "{{ orderer_org.caName }}"
+      caNamespace: "{{ orderer_org.caNamespace }}"
+      externalOrderersToJoin:
+        {% for external_orderer in orderer_org.externalOrderers %}
+        - host: {{ external_orderer.host }}
+          port: {{ external_orderer.port }}
+        {% endfor %}
+      mspID: {{ orderer_org.mspID }}
+      ordererEndpoints:
+        {% for endpoint in orderer_org.ordererEndpoints %}
+        - {{ endpoint }}
+        {% endfor %}
+      orderersToJoin: []
+    {% endfor %}
+  orderers:
+    {% for orderer in orderers %}
+    - host: {{ orderer.host }}
+      port: {{ orderer.port }}
+      tlsCert: |-
+        {{ orderer.tlsCert }}
+    {% endfor %}
