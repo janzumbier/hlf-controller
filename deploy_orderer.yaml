@@ -1,11 +1,3 @@
-# kubectl hlf ca register --name=ord-ca --user=orderer --secret=ordererpw \
-#   --type=orderer --enroll-id enroll --enroll-secret=enrollpw --mspid=OrdererMSP --ca-url="https://ord-ca.localho.st:443"
-
-# kubectl hlf ordnode create --image=$ORDERER_IMAGE --version=$ORDERER_VERSION \
-#    --storage-class=standard --enroll-id=orderer --mspid=OrdererMSP \
-#    --enroll-pw=ordererpw --capacity=2Gi --name=ord-node1 --ca-name=ord-ca.default \
-#    --hosts=orderer0-ord.localho.st --istio-port=443
-
 ---
 - name: Deploy all configured orderers from network config
   hosts: localhost

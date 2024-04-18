@@ -1,0 +1,33 @@
+---
+- name: Create msp identities of all defined organisations
+  hosts: localhost
+  tasks:
+    - name: Read JSON file
+      ansible.builtin.include_vars:
+        file: networkconfig/networkconfigexample.json
+        name: networkconfig
+      
+    - name: Load orderer and peerorganisations from network config
+      ansible.builtin.set_fact:
+        orderer_organisations: "{{ networkconfig | json_query('networkConfig.ordererOrganisations[*]')}}"
+        peer_organisations: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*]')}}"
+
+    - name: Register MSPID for peer organisations
+      command : kubectl hlf ca register --name={{ item.certificateAuthorities[0].name }} --user=admin --secret=adminpw --type=admin --enroll-id=enroll --enroll-secret=enrollpw --mspid={{item.mspid}}
+      loop: "{{ peer_organisations}}"
+      ignore_errors: true
+
+    - name: Enroll MSPID for peer organisations  
+      command : kubectl hlf ca enroll --name={{ item.certificateAuthorities[0].name }} --user=admin --secret=adminpw --type=admin --mspid={{item.mspid}} --ca-name=tlsca  --output=./certificates/{{item.mspid}}.yaml
+      command : kubectl create secret generic wallet-{{item.mspid | lower}} --namespace=default --from-file={{item.mspid}}.yaml=certificates/{{item.mspid}}.yaml 
+      loop: "{{ peer_organisations}}"
+
+    - name: Register MSPID for orderer organisations
+      command : kubectl hlf ca register --name={{ item.certificateAuthorities[0].name }} --user=admin --secret=adminpw --type=admin --enroll-id=enroll --enroll-secret=enrollpw --mspid={{item.mspid}}
+      loop: "{{orderer_organisations}}"
+      ignore_errors: true
+
+    - name: Enroll MSPID for orderer organisations
+      command : kubectl hlf ca enroll --name={{ item.certificateAuthorities[0].name }} --user=admin --secret=adminpw --type=admin --mspid={{item.mspid}} --ca-name=tlsca  --output=./certificates/{{item.mspid}}.yaml
+      command : kubectl create secret generic wallet-{{item.mspid | lower}} --namespace=default --from-file={{item.mspid}}.yaml=certificates/{{item.mspid}}.yaml
+      loop: "{{orderer_organisations}}"
