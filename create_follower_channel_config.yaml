@@ -3,10 +3,10 @@
   hosts: localhost
   vars:
     targetmspid: "Org1MSP"
-    targetchannel: "mychannel"
-    metadata_name: "{{targetchannel}}-{{targetmspid}}"
-    secretKey: "{{targetmspid}}.yaml"
-    secretName: "wallet-{{targetmspid | lower}}"
+    targetchannel: "demoxy"
+    metadata_name: "{{targetchannel | lower}}-{{targetmspid | lower}}"
+    secretKey: "user.yaml"
+    secretName: "{{targetmspid | lower}}-admin"
     secretNamespace: "default"
     url: "grpcs://{{first_orderer.name}}.default:7050"
 
@@ -30,7 +30,7 @@
 
     - name: Find Peer Organization with MSP ID Org1MSP
       ansible.builtin.set_fact:
-        anchor_peers: "{{ anchor_peers + [{'host': item.1.hosts, 'port': 443}] }}"
+        anchor_peers: "{{ anchor_peers + [{'host': (item.1.name)~'.default' , 'port': 7051}] }}"
         peers_to_join: "{{ peers_to_join + [{'name': item.1.name, 'namespace': 'default'}] }}"
       loop: "{{ peer_organisations | subelements('peers') }}"
       when: item.0.mspid == targetmspid
@@ -45,10 +45,6 @@
     - name: Building orderer dictionary
       ansible.builtin.set_fact:
         orderers: "{{ orderers + [{'certificate': certificate.stdout,'url': url}] }}"
-
-    - name: Print peers
-      debug:
-        msg: "{{certificate.stdout}}"
 
 
 

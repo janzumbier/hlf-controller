@@ -55,7 +55,7 @@
           kubernetes.core.helm:
             name: hlf-operator
             namespace: default
-            chart_version: 1.8.0
+            chart_version: 1.10.0
             chart_ref: kfs/hlf-operator
 
 

@@ -18,9 +18,9 @@
       ignore_errors: true
 
     - name: Enroll MSPID for peer organisations  
-      command : kubectl hlf ca enroll --name={{ item.certificateAuthorities[0].name }} --user=admin --secret=adminpw --type=admin --mspid={{item.mspid}} --ca-name=tlsca  --output=./certificates/{{item.mspid}}.yaml
-      command : kubectl create secret generic wallet-{{item.mspid | lower}} --namespace=default --from-file={{item.mspid}}.yaml=certificates/{{item.mspid}}.yaml 
-      loop: "{{ peer_organisations}}"
+      command: kubectl hlf identity create --name {{item.mspid | lower}}-admin --namespace default --ca-name {{item.certificateAuthorities[0].name}} --ca-namespace default --ca ca --mspid {{item.mspid}} --enroll-id admin --enroll-secret adminpw
+      loop: "{{peer_organisations}}"
+      ignore_errors: true
 
     - name: Register MSPID for orderer organisations
       command : kubectl hlf ca register --name={{ item.certificateAuthorities[0].name }} --user=admin --secret=adminpw --type=admin --enroll-id=enroll --enroll-secret=enrollpw --mspid={{item.mspid}}
@@ -28,6 +28,13 @@
       ignore_errors: true
 
     - name: Enroll MSPID for orderer organisations
-      command : kubectl hlf ca enroll --name={{ item.certificateAuthorities[0].name }} --user=admin --secret=adminpw --type=admin --mspid={{item.mspid}} --ca-name=tlsca  --output=./certificates/{{item.mspid}}.yaml
-      command : kubectl create secret generic wallet-{{item.mspid | lower}} --namespace=default --from-file={{item.mspid}}.yaml=certificates/{{item.mspid}}.yaml
+      command : kubectl hlf identity create --name orderer-{{item.mspid | lower}}-admin-tls --namespace default --ca-name {{item.certificateAuthorities[0].name}} --ca-namespace default --ca tlsca --mspid {{item.mspid}} --enroll-id admin --enroll-secret adminpw # tls identity
       loop: "{{orderer_organisations}}"
+      ignore_errors: true
+    
+    - name: Create sign identity for orderer organisations
+      command : kubectl hlf identity create --name orderer-{{item.mspid | lower}}-admin-sign --namespace default --ca-name {{item.certificateAuthorities[0].name}} --ca-namespace default --ca ca --mspid {{item.mspid}} --enroll-id admin --enroll-secret adminpw # sign identity
+      loop: "{{orderer_organisations}}"
+      ignore_errors: true
+
+

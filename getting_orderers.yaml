@@ -1,0 +1,13 @@
+---
+- block: 
+
+    - name: Getting orderer parameters
+      shell: |
+        IDENT_8=$(printf "%8s" "")
+        ORDERER0_TLS_CERT=$(kubectl get fabricorderernodes {{ orderer.name }} -o=jsonpath='{.status.tlsCert}' | sed -e "s/^/${IDENT_8}/")
+        echo "${ORDERER0_TLS_CERT}"
+      register: certificate
+
+    - name: Building orderer dictionary
+      ansible.builtin.set_fact:
+        orderers: "{{ orderers + [{'tlscert': certificate.stdout,'host': orderer.name, 'port': orderer.port}] }}"

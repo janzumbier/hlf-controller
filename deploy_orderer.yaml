@@ -22,6 +22,6 @@
       ignore_errors: true
 
     - name: Deploy each orderer of each organization
-      command: kubectl hlf ordnode create --image=hyperledger/fabric-orderer --version=2.4.6 --storage-class=standard --enroll-id=orderer --mspid={{ item.0.mspid}} --enroll-pw=ordererpw --capacity={{item.1.capacity}} --name={{item.1.name}}
+      command: kubectl hlf ordnode create --image=hyperledger/fabric-orderer --version=2.4.6 --storage-class=standard --enroll-id=orderer --mspid={{item.0.mspid}} --enroll-pw=ordererpw --capacity={{item.1.capacity}} --name={{item.1.name}}
        --ca-name={{item.1.caname}} --hosts={{item.1.hosts}} --istio-port={{item.1.istioport}}
       loop: "{{ orderer_organisations | subelements('orderers') }}"

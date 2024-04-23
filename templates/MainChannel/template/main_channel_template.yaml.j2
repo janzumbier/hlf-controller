@@ -1,3 +1,6 @@
+{% macro remove_initial_tabs(line) %}
+{{ line | replace('    ', '', 4) }}
+{% endmacro %}
 apiVersion: hlf.kungfusoftware.es/v1alpha1
 kind: FabricMainChannel
 metadata:
@@ -5,13 +8,15 @@ metadata:
 spec:
   name: {{ spec_name }}
   adminOrdererOrganizations:
-    {% for admin_orderer_org in admin_orderer_orgs %}
-    - mspID: {{ admin_orderer_org.mspID }}
+    {% for admin_orderer_org in admin_orderer_orgs -%}
+      - mspID: {{ admin_orderer_org.mspid }}
     {% endfor %}
+
   adminPeerOrganizations:
-    {% for admin_peer_org in admin_peer_orgs %}
-    - mspID: {{ admin_peer_org.mspID }}
+    {% for admin_peer_org in admin_peer_orgs -%}
+      - mspID: {{ admin_peer_org.mspid }}
     {% endfor %}
+
   channelConfig:
     application:
       acls: null
@@ -41,39 +46,44 @@ spec:
     policies: null
   externalOrdererOrganizations: []
   peerOrganizations:
-    {% for peer_org in peer_orgs %}
-    - mspID: {{ peer_org.mspID }}
-      caName: "{{ peer_org.caName }}"
-      caNamespace: "{{ peer_org.caNamespace }}"
+    {% for peer_org in peer_orgs -%}
+    - mspID: {{ peer_org.mspid }}
+      caName: "{{ peer_org.caname }}"
+      caNamespace: "{{ peer_org.canamespace }}"
     {% endfor %}
+
   identities:
-    {% for identity_key, identity_val in identities.items() %}
-    {{ identity_key }}:
-      secretKey: {{ identity_val.secretKey }}
-      secretName: {{ identity_val.secretName }}
-      secretNamespace: {{ identity_val.secretNamespace }}
+    {% for identity in identities -%}
+
+    {{ identity.mspid }}:
+      secretKey: {{ identity.secretkey }}
+      secretName: {{ identity.secretname }}
+      secretNamespace: {{ identity.secretnamespace }}
     {% endfor %}
+
   externalPeerOrganizations: []
   ordererOrganizations:
-    {% for orderer_org in orderer_orgs %}
-    - caName: "{{ orderer_org.caName }}"
-      caNamespace: "{{ orderer_org.caNamespace }}"
-      externalOrderersToJoin:
-        {% for external_orderer in orderer_org.externalOrderers %}
-        - host: {{ external_orderer.host }}
-          port: {{ external_orderer.port }}
-        {% endfor %}
-      mspID: {{ orderer_org.mspID }}
-      ordererEndpoints:
-        {% for endpoint in orderer_org.ordererEndpoints %}
-        - {{ endpoint }}
-        {% endfor %}
-      orderersToJoin: []
-    {% endfor %}
+{% for orderer_org in networkConfig.ordererOrganisations %}
+  - caName: "{{ orderer_org.certificateAuthorities[0].name }}"
+    caNamespace: "default"
+    externalOrderersToJoin:
+      {% for orderer in orderer_org.orderers -%}
+        - host: {{ orderer.name }}
+        port: {{ orderer.externalport }}
+      {% endfor %}
+
+    mspID: {{ orderer_org.mspid }}
+    ordererEndpoints:
+      {% for orderer in orderer_org.orderers -%}
+        - {{ orderer.endpoint }}
+      {% endfor %}
+
+    orderersToJoin: []
+{% endfor %}
   orderers:
-    {% for orderer in orderers %}
-    - host: {{ orderer.host }}
+    {% for orderer in orderers -%}
+      - host: {{ orderer.host }}
       port: {{ orderer.port }}
       tlsCert: |-
-        {{ orderer.tlsCert }}
+        {{ remove_initial_tabs('        ' ~ orderer.tlscert) }}
     {% endfor %}

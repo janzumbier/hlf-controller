@@ -29,35 +29,6 @@
                         "istioport": 443
                     }
                 ]
-            },
-            {
-                "name": "Org2",
-                "mspid": "Org2MSP",
-                "domain": "org2.example.com",
-                "peers": [
-                    {
-                        "name":"org2-peer0",
-                        "capacity":"5Gi",
-                        "caname":"org2-ca.default",
-                        "hosts":"peer0-org2.localho.st",
-                        "istioport": 443
-                    },
-                    {
-                        "name":"org2-peer1",
-                        "capacity":"5Gi",
-                        "caname":"org2-ca.default",
-                        "hosts":"peer1-org2.localho.st",
-                        "istioport": 443
-                    }
-                ],
-                "certificateAuthorities": [
-                    {
-                        "name":"org2-ca",
-                        "capacity":"1Gi",
-                        "hosts":"org2-ca.localho.st",
-                        "istioport": 443
-                    }
-                ]
             }
         ],
         "ordererOrganisations": [
@@ -70,7 +41,10 @@
                         "capacity":"2Gi",
                         "caname":"ord-ca.default",
                         "hosts":"orderer0-ord.localho.st",
-                        "istioport": 443
+                        "istioport": 443,
+                        "endpoint": "ord-node1:7050",
+                        "externalport": 7053,
+                        "port": 7050
                     }
                 ],
                 "certificateAuthorities": [

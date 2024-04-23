@@ -1,0 +1,7 @@
+---
+- block:
+    - name: requesting certificates
+      include_tasks: getting_orderers.yaml
+      loop: "{{org.orderers}}"
+      loop_control:
+        loop_var: orderer

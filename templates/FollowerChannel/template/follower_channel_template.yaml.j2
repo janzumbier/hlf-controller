@@ -1,3 +1,6 @@
+{% macro remove_initial_tabs(line) %}
+{{ line | replace('    ', '', 4) }}
+{% endmacro %}
 apiVersion: hlf.kungfusoftware.es/v1alpha1
 kind: FabricFollowerChannel
 metadata:
@@ -21,7 +24,7 @@ spec:
   orderers:
     {% for orderer in orderers -%}
     - certificate: |
-    {{ orderer.certificate }}
+      {{ remove_initial_tabs('          ' ~ orderer.certificate) }}
       url: {{ orderer.url }}
     {% endfor %}
     
