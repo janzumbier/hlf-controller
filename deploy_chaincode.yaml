@@ -1,0 +1,75 @@
+---
+- name: Deploys and installs an external chaincode for all configured organisations
+  hosts: localhost
+  vars:
+    channel: "demoxy"
+    chaincode_name: "token2"
+    endorsement_policy: "OR('Org1MSP.member')"
+  tasks:
+
+    - name: Reading JSON file
+      ansible.builtin.include_vars:
+        file: networkconfig/networkconfigexample.json
+        name: networkconfig
+      
+    - name: Loading all peer organisations from network config
+      ansible.builtin.set_fact:
+        peer_organisations: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*]')}}"
+
+    - name: Register user admin for each organisations
+      command: kubectl hlf identity create --name {{item.mspid | lower}}-admin --namespace default --ca-name {{ item.certificateAuthorities[0].name }} --ca-namespace default --ca ca --mspid {{item.mspid}} --enroll-id admin --enroll-secret adminpw --ca-enroll-id=enroll --ca-enroll-secret=enrollpw --ca-type=admin
+      loop: "{{peer_organisations}}"
+      ignore_errors: true
+
+      ### TODO ORDERER ADJSUTMENTS
+    - name: Creating a network configuration for each organisation
+      command: kubectl hlf networkconfig create --name={{item.mspid | lower}}-cp -o {{item.mspid}} -o OrdererMSP -c {{ channel }} --identities={{item.mspid | lower}}-admin.default --secret={{item.mspid | lower}}-cp
+      loop: "{{ peer_organisations}}"
+      ignore_errors: true
+
+    - name: Fetching connection profile of each organisation
+      shell: kubectl get secret {{item.mspid | lower}}-cp -o jsonpath="{.data.config\.yaml}" | base64 --decode > certificates/{{item.mspid | lower}}-cp.yaml
+      loop: "{{ peer_organisations}}"
+
+    - name: Removing tgzs
+      shell: rm chaincode/code.tar.gz chaincode/chaincode.tgz
+      ignore_errors: true
+
+    - name: Generating connection.json from template
+      ansible.builtin.template:
+        src: "chaincode/connection.json.j2"
+        dest: "chaincode/connection.json"
+
+    - name: Generating metadata.json from template
+      ansible.builtin.template:
+        src: "chaincode/metadata.json.j2"
+        dest: "chaincode/metadata.json"
+
+    - name: taring
+      shell: cd chaincode && tar cfz code.tar.gz connection.json
+
+    - name: taring
+      shell: cd chaincode && tar cfz chaincode.tgz metadata.json code.tar.gz
+
+    - name: Calculating package id
+      shell: kubectl hlf chaincode calculatepackageid --path=chaincode/chaincode.tgz --language=node --label={{chaincode_name}}
+      register: package_id
+
+    - name: Print package id 
+      debug:
+        msg: " {{package_id.stdout }} "
+
+    - name: Installing chaincode on all peers
+      command: kubectl hlf chaincode install --path=chaincode/chaincode.tgz --config=certificates/{{item.0.mspid | lower}}-cp.yaml --language=java --label={{chaincode_name}} --user={{item.0.mspid | lower}}-admin-default --peer={{item.1.name}}.default
+      loop: "{{ peer_organisations | subelements('peers') }}"
+
+    - name: Deploy chaincode container to cluster
+      command: kubectl hlf externalchaincode sync --image=janzumbier/tokencontract:latest --name={{chaincode_name}} --namespace=default --package-id={{package_id.stdout}} --tls-required=false --replicas=1 --env=CORE_CHAINCODE_ID_NAME={{package_id.stdout}}
+
+    - name: Approve the chaincode for all organisations
+      command: kubectl hlf chaincode approveformyorg --config=certificates/{{item.mspid | lower}}-cp.yaml --user={{item.mspid | lower}}-admin-default --peer=org1-peer0.default --package-id={{package_id.stdout}} --version "1.0" --sequence "1" --name={{chaincode_name}} --policy="OR('Org1MSP.member')" --channel={{channel}}
+      loop: "{{ peer_organisations}}"
+
+    - name: Committing chaincode for all organisations
+      command: kubectl hlf chaincode commit --config=certificates/{{item.mspid | lower}}-cp.yaml --user={{item.mspid | lower}}-admin-default --mspid={{item.mspid}}  --version "1.0" --sequence "1" --name={{chaincode_name}} --policy="OR('Org1MSP.member')" --channel={{channel}}
+      loop: "{{ peer_organisations}}"
