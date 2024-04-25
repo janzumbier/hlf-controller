@@ -1,39 +1,41 @@
 ---
-- name: Render YAML configuration from JSON data
-  hosts: localhost
-  vars:
-    targetmspid: "Org1MSP"
-    targetchannel: "demoxy"
-    metadata_name: "{{targetchannel | lower}}-{{targetmspid | lower}}"
-    secretKey: "user.yaml"
-    secretName: "{{targetmspid | lower}}-admin"
-    secretNamespace: "default"
-    url: "grpcs://{{first_orderer.name}}.default:7050"
+  - block:
 
-  tasks:
-    - name: Read JSON file
-      ansible.builtin.include_vars:
-        file: networkconfig/networkconfigexample.json
-        name: networkconfig
-      
+    - name: Setting metadata
+      ansible.builtin.set_fact:
+        targetchannel: "demo"
+        targetmspid: "{{ peer_org.mspid }}"
+        peer_organisations: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*]')}}"
+        #### What about downtime??? TODO
+        first_orderer: "{{ networkconfig | json_query('networkConfig.ordererOrganisations[0].orderers[0]')}}"
+        ####
+        
+
     - name: Load all peer organisations from network config
       ansible.builtin.set_fact:
         peer_organisations: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*]')}}"
         #### What about downtime??? TODO
         first_orderer: "{{ networkconfig | json_query('networkConfig.ordererOrganisations[0].orderers[0]')}}"
         ####
-        channels: "{{ networkconfig | json_query('networkConfig.channels[*]')}}"
         anchor_peers: []
         peers_to_join: []
         orderers: []
+        metadata_name: "{{targetchannel | lower}}-{{targetmspid | lower}}"
+        secretKey: "user.yaml"
+        secretName: "{{targetmspid | lower}}-admin"
+        secretNamespace: "default"
+        url: "grpcs://{{first_orderer.name}}.default:7050"
+
+    - name: Getting anchor peers
+      ansible.builtin.set_fact:
+        anchor_peers: "{{ anchor_peers + [{'host': (item.name)~'.default' , 'port': 7051}] }}"
+      loop: "{{ peer_org.peers }}"
 
 
     - name: Find Peer Organization with MSP ID Org1MSP
       ansible.builtin.set_fact:
-        anchor_peers: "{{ anchor_peers + [{'host': (item.1.name)~'.default' , 'port': 7051}] }}"
-        peers_to_join: "{{ peers_to_join + [{'name': item.1.name, 'namespace': 'default'}] }}"
-      loop: "{{ peer_organisations | subelements('peers') }}"
-      when: item.0.mspid == targetmspid
+        peers_to_join: "{{ peers_to_join + [{'name': item.name, 'namespace': 'default'}] }}"
+      loop: "{{ peer_org.peers }}"
 
     - name: Getting orderer parameters
       shell: |
@@ -47,8 +49,10 @@
         orderers: "{{ orderers + [{'certificate': certificate.stdout,'url': url}] }}"
 
 
-
     - name: Generate YAML file from template
       ansible.builtin.template:
         src: "templates/FollowerChannel/template/follower_channel_template.yaml.j2"
         dest: "templates/FollowerChannel/generatedConfigs/{{ metadata_name }}.yaml"
+
+    - name: Apply followerchannel file 
+      shell: kubectl apply -f templates/FollowerChannel/generatedConfigs/{{ metadata_name }}.yaml

@@ -1,0 +1,25 @@
+---
+- name: Creating configured channels
+  hosts: localhost
+  vars_files:
+     - networkconfig/networkconfigexample.json
+   
+  tasks:
+
+    - name: Read JSON file
+      ansible.builtin.include_vars:
+        file: networkconfig/networkconfigexample.json
+        name: networkconfig
+
+    - name: Creating main channel
+      include_tasks: create_main_channel_config.yaml
+
+    - name: Creating follower channel
+      include_tasks: create_follower_channel_config.yaml
+      loop: "{{ networkconfig | json_query('networkConfig.peerOrganisations[*]')}}"
+      loop_control:
+        loop_var: peer_org
+        
+      
+
+    

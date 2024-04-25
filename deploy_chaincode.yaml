@@ -2,9 +2,8 @@
 - name: Deploys and installs an external chaincode for all configured organisations
   hosts: localhost
   vars:
-    channel: "demoxy"
-    chaincode_name: "token2"
-    endorsement_policy: "OR('Org1MSP.member')"
+    channel: "demo"
+    chaincode_name: "token"
   tasks:
 
     - name: Reading JSON file
@@ -67,9 +66,12 @@
       command: kubectl hlf externalchaincode sync --image=janzumbier/tokencontract:latest --name={{chaincode_name}} --namespace=default --package-id={{package_id.stdout}} --tls-required=false --replicas=1 --env=CORE_CHAINCODE_ID_NAME={{package_id.stdout}}
 
     - name: Approve the chaincode for all organisations
-      command: kubectl hlf chaincode approveformyorg --config=certificates/{{item.mspid | lower}}-cp.yaml --user={{item.mspid | lower}}-admin-default --peer=org1-peer0.default --package-id={{package_id.stdout}} --version "1.0" --sequence "1" --name={{chaincode_name}} --policy="OR('Org1MSP.member')" --channel={{channel}}
-      loop: "{{ peer_organisations}}"
+      command: kubectl hlf chaincode approveformyorg --config=certificates/{{item.mspid | lower}}-cp.yaml --user={{item.mspid | lower}}-admin-default --peer={{item.peers[0].name}}.default --package-id={{package_id.stdout}} --version "1.0" --sequence "1" --name={{chaincode_name}} --policy="OR('Org1MSP.member','Org2MSP.member')" --channel={{channel}}
+      loop: "{{peer_organisations}}"
+
+    - name: pause for 30 seconds
+      pause:
+        seconds: 30
 
     - name: Committing chaincode for all organisations
-      command: kubectl hlf chaincode commit --config=certificates/{{item.mspid | lower}}-cp.yaml --user={{item.mspid | lower}}-admin-default --mspid={{item.mspid}}  --version "1.0" --sequence "1" --name={{chaincode_name}} --policy="OR('Org1MSP.member')" --channel={{channel}}
-      loop: "{{ peer_organisations}}"
+      command: kubectl hlf chaincode commit --config=certificates/{{peer_organisations[0].mspid | lower}}-cp.yaml --user={{peer_organisations[0].mspid | lower}}-admin-default --mspid={{peer_organisations[0].mspid}}  --version "1.0" --sequence "1" --name={{chaincode_name}} --policy="OR('Org1MSP.member','Org2MSP.member')" --channel={{channel}}

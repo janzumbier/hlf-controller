@@ -1,11 +1,6 @@
-# Good luck undestanding this code
-
 ---
-- name: Create main channel yaml file from template
-  hosts: localhost
-  vars_files:
-    - networkconfig/networkconfigexample.json
-  tasks: 
+- block:
+
     - name: Read JSON file
       ansible.builtin.include_vars:
         file: networkconfig/networkconfigexample.json
@@ -26,8 +21,8 @@
         externalorderers: []
         ordererendpoints: []
         certificates: []
-        metadata_name: "demoxy"
-        spec_name: "demoxy"
+        metadata_name: "demo"
+        spec_name: "demo"
 
 
     - name: Setting up configuration for peer orgs
@@ -48,7 +43,6 @@
         identities: "{{ identities + [{'mspid': (item.mspid)~'-sign' , 'secretkey': 'user.yaml', 'secretname': 'orderer-' ~ (item.mspid | lower) ~ '-admin-sign', 'secretnamespace': 'default'}] }}"
       loop: "{{orderer_organisations}}"
       
-
     - name: Collecting orderer orgs
       ansible.builtin.set_fact:
         orderer_orgs_prep: "{{ orderer_orgs + [{'mspid': item.0.mspid, 'caname': item.1.name, 'canamespace': 'default'}] }}"
@@ -60,23 +54,11 @@
       loop_control:
         loop_var: org
 
-    
-
-    - name: Print peers
-      debug:
-        msg: "{{identities}}"
-
-   
-    #- name: Zipping orderer orgs, external orderers and endpoints
-     # set_fact: 
-      #  orderer_orgs: "{{orderer_orgs + [{'caname': orderer_orgs_prep[idx].caname ,'canamespace': orderer_orgs_prep[idx].canamespace , 'externalorderers': externalorderers[idx] , 'mspid': orderer_orgs_prep[idx].mspid, 'ordererendpoints': ordererendpoints[idx] }]}}"
-     # loop: "{{ orderer_orgs_prep }}"
-     # loop_control:
-     #   index_var: idx
-
-        
-
     - name: Generate YAML file from template
       ansible.builtin.template:
         src: "templates/MainChannel/template/main_channel_template.yaml.j2"
         dest: "templates/MainChannel/generatedConfigs/{{ metadata_name }}.yaml"
+
+
+    - name: Apply mainchannel file 
+      shell: kubectl apply -f templates/MainChannel/generatedConfigs/{{ metadata_name }}.yaml
